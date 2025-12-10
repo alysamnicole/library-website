@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collections</title>
+</head>
+ <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <style>
+    :root{
+      --accent:#F98845;
+      --accent-dark:#e6762f;
+      --bg:#ffffff;
+      --muted:#777;
+      --maxw:1200px;
+      --page-pad:32px;
+      --chat-width:340px;
+    }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:#111; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    a{ color:var(--accent); }
+
+    /* Top header */
+    .header { display:flex; justify-content:space-between; align-items:center; padding:16px 28px; max-width:var(--maxw); margin:0 auto; }
+    .logo{display:flex;gap:12px;align-items:center}
+    .logo img{width:55px}
+    .logo-text{font-weight:700;font-size:20px}
+    .header-controls{display:flex;gap:12px;align-items:center}
+    .top-buttons{display:flex;gap:8px;align-items:center}
+    .top-buttons button{background:var(--accent);border:none;color:white;padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:600}
+
+    /* About section */
+    .about-section {
+        text-align: center;
+        margin: 40px;
+    }
+</style>
+<div class ="about-section">
+<h1>About Shell Library</h1>
+    <img src="assets/images/beach.png" alt="Beach Image" style="width:300px;height:auto;">
+    <p>The Shell Library System is a fictional library system located in Shell County in Bikini Bottom, Florida. This website was made with sample data taken from a Kaggle dataset. This project was made by Florida Tech graduate student, Alysa Miller, as part of a final project assignment in pursuit of a Master's Degree in Computer Information Systems.  </p>
+</div>
+</body>
+</html>

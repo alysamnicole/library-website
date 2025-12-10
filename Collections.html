@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collections • Shell Library System</title>
+
+    <link href="style.css" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --accent: #f98845;
+        --accent-dark: #e6762f;
+        --bg: #ffffff;
+        --muted: #777;
+        --maxw: 1200px;
+        --page-pad: 32px;
+        --chat-width: 340px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+        background: var(--bg);
+        color: #111;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      a {
+        color: var(--accent);
+      }
+
+      /* Top header */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 28px;
+        max-width: var(--maxw);
+        margin: 0 auto;
+      }
+      .logo {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .logo img {
+        width: 55px;
+      }
+      .logo-text {
+        font-weight: 700;
+        font-size: 30px;
+      }
+      .header-controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .top-buttons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .top-buttons button {
+        background: var(--accent);
+        border: none;
+        color: white;
+        padding: 8px 14px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      /* Search input (top-right) */
+      .search-input {
+        width: 220px;
+        padding: 8px 12px;
+        border-radius: 20px;
+        border: 1px solid #ddd;
+        outline: none;
+        font-size: 14px;
+      }
+      .search-input:focus {
+        box-shadow: 0 6px 18px rgba(249, 136, 69, 0.12);
+        border-color: var(--accent-dark);
+      }
+
+      /* Nav */
+      nav {
+        display: flex;
+        justify-content: center;
+        gap: 60px;
+        font-weight: 600;
+        font-size: 16px;
+        margin-top: 6px;
+      }
+      .nav-bar-line {
+        height: 10px;
+        background: var(--accent);
+        margin-top: 10px;
+      }
+      /* PAGE TITLE */
+      .collections-title {
+        text-align: center;
+        font-size: 36px;
+        font-weight: 700;
+        margin-top: 40px;
+      }
+
+      .genre-section {
+        margin: 60px auto;
+        width: 85%;
+      }
+
+      .genre-header {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 25px;
+      }
+
+      .genre-books {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+      }
+
+      .book-item {
+        width: 160px;
+        text-align: center;
+        position: relative;
+      }
+
+      .book-item img {
+        width: 160px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      }
+
+      .book-item img:hover {
+        transform: scale(1.07);
+      }
+
+      .popup {
+        display: none;
+        position: absolute;
+        top: -10px;
+        left: 170px;
+        width: 230px;
+        background: #fff;
+        padding: 12px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 20;
+        font-size: 13px;
+      }
+
+      .book-item:hover .popup {
+        display: block;
+      }
+
+      .checkout-btn {
+        margin-top: 10px;
+        background: #f98845;
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.2s ease;
+      }
+
+      .checkout-btn:hover {
+        background: #dd7333;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <div class="header">
+      <div class="logo">
+        <img src="assets/images/shell.png" alt="Shell Logo" />
+        <div class="logo-text">Shell Library<br /><span>SYSTEM</span></div>
+      </div>
+
+      <div class="top-buttons">
+        <button onclick="window.location.href='login.html'">login</button>
+
+        <div class="search-container">
+          <input type="text" id="searchBar" placeholder="Search books…" />
+        </div>
+      </div>
+    </div>
+
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="collections.html">Collections</a>
+      <a href="programs.html">Programs</a>
+      <a href="community.html">Community</a>
+    </nav>
+
+    <div class="nav-bar-line"></div>
+
+    <!-- PAGE TITLE -->
+    <h1 class="collections-title">Library Collections</h1>
+
+    <!-- MAIN GENRE SECTIONS -->
+    <div id="collectionsContainer"></div>
+
+    <!-- SCRIPT FOR BOOKS -->
+    <script>
+      fetch("data/library_books.csv")
+        .then((response) => response.text())
+        .then((csv) => {
+          const rows = csv.split("\n").slice(1, 46); // first 45 books
+          const collectionsDiv = document.getElementById(
+            "collectionsContainer"
+          );
+
+          /* ------------------------------------------
+           SIMPLIFIED GENRE GROUPS (NO MORE ERRORS)
+        ------------------------------------------- */
+          const genreMap = {
+            fiction: "Fiction",
+            novel: "Fiction",
+            literature: "Fiction",
+
+            "non-fiction": "Non-Fiction",
+            history: "Non-Fiction",
+            biography: "Non-Fiction",
+
+            mystery: "Mystery & Thriller",
+            thriller: "Mystery & Thriller",
+            crime: "Mystery & Thriller",
+
+            romance: "Romance",
+            love: "Romance",
+
+            fantasy: "Fantasy",
+            magic: "Fantasy",
+            adventure: "Fantasy",
+          };
+
+          // Final clean categories shown on the page
+          const genres = {
+            Fiction: [],
+            "Non-Fiction": [],
+            "Mystery & Thriller": [],
+            Romance: [],
+            Fantasy: [],
+            Other: [],
+          };
+
+          /* ------------------------------------------
+           LOAD BOOKS & SORT INTO SIMPLE GENRES
+        ------------------------------------------- */
+          rows.forEach((row, index) => {
+            const parts = row.split(",");
+
+            if (parts.length < 5) return;
+
+            const title = parts[0];
+            const author = parts[1];
+            const description = parts[2];
+            const rating = parts[3];
+            const rawGenre = parts[4].trim().toLowerCase();
+
+            // Choose a simplified genre
+            let chosen = "Other";
+            for (const key in genreMap) {
+              if (rawGenre.includes(key)) {
+                chosen = genreMap[key];
+                break;
+              }
+            }
+
+            genres[chosen].push({
+              index: index + 1,
+              title,
+              author,
+              description,
+              rating,
+            });
+          });
+
+          /* ------------------------------------------
+           RENDER GENRE SECTIONS
+        ------------------------------------------- */
+          for (const genre in genres) {
+            const section = document.createElement("div");
+            section.classList.add("genre-section");
+
+            section.innerHTML = `
+                <div class="genre-header">${genre}</div>
+                <div class="genre-books"></div>
+            `;
+
+            const container = section.querySelector(".genre-books");
+
+            genres[genre].forEach((book) => {
+              let imgPath = `assets/images/book${book.index}.jpeg`;
+
+              const item = document.createElement("div");
+              item.classList.add("book-item");
+
+              item.innerHTML = `
+                    <img src="${imgPath}" />
+
+                    <div class="popup">
+                        <strong>${book.title}</strong><br>
+                        ${book.author}<br><br>
+                        ${book.description}<br><br>
+                        ⭐ Rating: ${book.rating}
+                    </div>
+
+                    <button class="checkout-btn" onclick="addToCart('${book.title}')">
+                        Check Out
+                    </button>
+                `;
+
+              container.appendChild(item);
+            });
+
+            collectionsDiv.appendChild(section);
+          }
+        })
+        .catch((err) => console.error("Failed to load books:", err));
+
+      // temporary cart handler
+      function addToCart(title) {
+        alert(`"${title}" added to cart!`);
+      }
+    </script>
+  </body>
+</html>

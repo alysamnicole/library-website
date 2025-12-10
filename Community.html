@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collections</title>
+</head>
+ <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <style>
+    :root{
+      --accent:#F98845;
+      --accent-dark:#e6762f;
+      --bg:#ffffff;
+      --muted:#777;
+      --maxw:1200px;
+      --page-pad:32px;
+      --chat-width:340px;
+    }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:#111; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    a{ color:var(--accent); }
+
+    /* Top header */
+    .header { display:flex; justify-content:space-between; align-items:center; padding:16px 28px; max-width:var(--maxw); margin:0 auto; }
+    .logo{display:flex;gap:12px;align-items:center}
+    .logo img{width:55px}
+    .logo-text{font-weight:700;font-size:20px}
+    .header-controls{display:flex;gap:12px;align-items:center}
+    .top-buttons{display:flex;gap:8px;align-items:center}
+    .top-buttons button{background:var(--accent);border:none;color:white;padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:600}
+
+    /* Community section */
+    .Community {
+        text-align: center;
+        margin: 40px;
+    }
+
+    /* Review Section */
+    .review-container {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .review-container h2 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    .review-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .review-form input,
+    .review-form textarea {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+    }
+
+    .review-form textarea {
+        height: 120px;
+        resize: vertical;
+    }
+
+    .review-form button {
+        padding: 12px;
+        background: var(--accent);
+        border: none;
+        color: white;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .review-card {
+        background: #fafafa;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        border-left: 4px solid var(--accent);
+    }
+
+    .review-card .name {
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 6px;
+    }
+
+    .review-card .text {
+        font-size: 14px;
+        color: #333;
+    }
+
+
+</style>
+
+<div class="Community">
+    <h1>Community</h1>
+    <p>Join the discourse, leave a review!</p>
+</div>
+
+<div class="review-container">
+    <h2>Book Reviews</h2>
+
+    <div class="review-form">
+        <input type="text" id="reviewerName" placeholder="Your name">
+        <textarea id="reviewText" placeholder="Write your review..."></textarea>
+        <button onclick="postReview()">Post Review</button>
+    </div>
+
+    <div id="reviewsList" class="reviews-list"></div>
+</div>
+
+<script>
+// Load reviews on page load
+document.addEventListener("DOMContentLoaded", loadReviews);
+
+function postReview() {
+    const name = document.getElementById("reviewerName").value;
+    const text = document.getElementById("reviewText").value;
+
+    if (!name || !text) {
+        alert("Please enter your name and review.");
+        return;
+    }
+
+    const newReview = { name, text, time: Date.now() };
+
+    // Get previous reviews
+    let reviews = JSON.parse(localStorage.getItem("bookReviews")) || [];
+    reviews.unshift(newReview); // newest first
+
+    localStorage.setItem("bookReviews", JSON.stringify(reviews));
+
+    // Reset form and reload list
+    document.getElementById("reviewerName").value = "";
+    document.getElementById("reviewText").value = "";
+
+    loadReviews();
+}
+
+function loadReviews() {
+    const reviews = JSON.parse(localStorage.getItem("bookReviews")) || [];
+    const list = document.getElementById("reviewsList");
+
+    list.innerHTML = "";
+
+    reviews.forEach(r => {
+        const reviewCard = document.createElement("div");
+        reviewCard.className = "review-card";
+
+        reviewCard.innerHTML = `
+            <div class="name">${r.name}</div>
+            <div class="text">${r.text}</div>
+        `;
+
+        list.appendChild(reviewCard);
+    });
+}
+</script>
+
+</body>
+</html>

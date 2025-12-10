@@ -1,0 +1,257 @@
+/* ------------------------------------------------------------
+   GENERAL LAYOUT
+------------------------------------------------------------ */
+body {
+  margin: 0;
+  font-family: "Poppins", Arial, sans-serif;
+  background-color: #ffffff;
+}
+
+/* Center page content a bit more */
+header {
+  width: 100%;
+}
+
+/* ------------------------------------------------------------
+   NAVIGATION BAR (matching screenshot layout)
+------------------------------------------------------------ */
+.navbar {
+  display: flex;
+  justify-content: center; /* Center everything horizontally */
+  align-items: center;
+  gap: 80px; /* Space between left/nav + right/buttons */
+  padding: 35px 40px;
+  position: relative;
+}
+
+/* ------------ NAV LINKS ------------ */
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 55px; /* Wider spacing like your picture */
+  padding: 0;
+  margin: 0;
+}
+
+.nav-links li {
+  position: relative;
+  padding-top: 20px; /* creates room for orange line above */
+}
+
+/* Link text */
+.nav-links a {
+  text-decoration: none;
+  color: #000;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* Orange line above each tab */
+.hover-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 6px;
+  background: #f26522;
+  transition: width 0.3s;
+  border-radius: 10px;
+}
+
+/* On hover → show full orange bar */
+.nav-links li:hover .hover-line {
+  width: 100%;
+}
+
+/* Orange bar under entire navbar */
+header::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 12px;
+  background-color: #f26522;
+}
+
+/* ------------------------------------------------------------
+   LOGIN + SEARCH BUTTONS (curved, orange fill on hover)
+------------------------------------------------------------ */
+.nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.trans-btn {
+  background: transparent;
+  border: none;
+  padding: 18px 38px;
+  border-radius: 45px;
+  font-size: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  border: 3px solid #f26522;
+  color: #f26522;
+  transition: 0.3s;
+}
+
+.trans-btn:hover {
+  background: #f26522;
+  color: #fff;
+}
+
+/* Search wrapper */
+.search-wrapper {
+  background: transparent;
+  border: 3px solid #f26522;
+  border-radius: 45px;
+  display: flex;
+  align-items: center;
+  padding: 8px 20px;
+  transition: 0.3s;
+}
+
+.search-wrapper:hover {
+  background: #f26522;
+}
+
+/* Search text */
+.search-wrapper input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 18px;
+  width: 130px;
+}
+
+/* Orange icon button */
+.search-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: #f26522;
+  transition: 0.3s;
+}
+
+.search-wrapper:hover .search-btn,
+.search-wrapper:hover input::placeholder {
+  color: #fff;
+}
+
+/* ------------------------------------------------------------
+   CAROUSEL / HERO BANNER
+------------------------------------------------------------ */
+.carousel {
+  width: 100%;
+  position: relative;
+  margin-top: 30px;
+}
+
+.slides {
+  display: flex;
+  transition: transform 0.7s ease-in-out;
+}
+
+.slide {
+  min-width: 100%;
+  position: relative;
+}
+
+.slide img {
+  width: 100%;
+  height: 350px; /* matches screenshot height */
+  object-fit: cover;
+}
+
+.slide-text {
+  position: absolute;
+  top: 50%;
+  right: 10%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 40px;
+  font-weight: 700;
+  width: 500px;
+}
+
+/* ------------------------------------------------------------
+   CAROUSEL ARROWS + DOTS
+------------------------------------------------------------ */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 35px;
+  background: #ffffffc0;
+  border-radius: 50%;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+}
+
+.arrow.left {
+  left: 15px;
+}
+.arrow.right {
+  right: 15px;
+}
+
+.dots {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.dots span {
+  height: 15px;
+  width: 15px;
+  background: #ccc;
+  display: inline-block;
+  border-radius: 50%;
+  margin: 5px;
+  cursor: pointer;
+}
+
+.active-dot {
+  background: #f26522;
+}
+
+/* ------------------------------------------------------------
+   CHATBOT LADY (bottom right)
+------------------------------------------------------------ */
+.chatbot-container {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+}
+
+.chatbot {
+  width: 160px;
+  transition: transform 0.4s ease, filter 0.4s ease;
+}
+
+.chatbot:hover {
+  transform: scale(1.25);
+  filter: drop-shadow(0 0 15px #ff9966);
+}
+
+.chatbot-wrapper {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
+.chatbot-tooltip {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    white-space: nowrap;
+    display: none;
+}
+
+.chatbot-wrapper:hover .chatbot-tooltip {
+    display: block;
+}

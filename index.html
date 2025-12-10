@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Shell Library</title>
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <style>
+    :root{
+      --accent:#F98845;
+      --accent-dark:#e6762f;
+      --bg:#ffffff;
+      --muted:#777;
+      --maxw:1200px;
+      --page-pad:32px;
+      --chat-width:340px;
+    }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:#111; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    a{ color:var(--accent); }
+
+    /* Top header */
+    .header { display:flex; justify-content:space-between; align-items:center; padding:16px 28px; max-width:var(--maxw); margin:0 auto; }
+    .logo{display:flex;gap:12px;align-items:center}
+    .logo img{width:55px}
+    .logo-text{font-weight:700;font-size:30px}
+    .header-controls{display:flex;gap:12px;align-items:center}
+    .top-buttons{display:flex;gap:8px;align-items:center}
+    .top-buttons button{background:var(--accent);border:none;color:white;padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:600}
+
+    /* Search input (top-right) */
+    .search-input {
+      width:220px;
+      padding:8px 12px;
+      border-radius:20px;
+      border:1px solid #ddd;
+      outline:none;
+      font-size:14px;
+    }
+    .search-input:focus { box-shadow:0 6px 18px rgba(249,136,69,0.12); border-color:var(--accent-dark); }
+
+    /* Nav */
+    nav{ display:flex; justify-content:center; gap:60px; font-weight:600; font-size:16px; margin-top:6px }
+    .nav-bar-line{ height:10px; background:var(--accent); margin-top:10px }
+
+    /* Carousel */
+    .carousel-container{ width:100%; height:350px; overflow:hidden; background:#f5f5f5 }
+    .carousel-slide{ display:flex; height:100%; transition:transform .6s cubic-bezier(.22,.9,.25,1) }
+    .carousel-slide img{ width:100%; height:100%; object-fit:cover; flex:0 0 100% }
+
+    /* Icon row */
+    .icon-row{ display:flex;justify-content:center;gap:120px;margin:36px 0; text-align:center; flex-wrap:wrap }
+    .icon-item img{ width:120px }
+
+    /* Books grid */
+    .container{ max-width:var(--maxw); margin:0 auto; padding:0 var(--page-pad) 80px }
+    h2.section-title{ margin:20px 0; font-size:20px; font-weight:700 }
+    .books-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:18px }
+    .book-card{ background:#fff; border-radius:8px; padding:12px; text-align:center; position:relative; box-shadow:0 1px 4px rgba(0,0,0,0.04); transition:transform .12s,box-shadow .12s }
+    .book-card:hover{ transform:translateY(-6px); box-shadow:0 12px 30px rgba(0,0,0,0.08) }
+    .book-cover{ width:100%; height:210px; object-fit:cover; border-radius:6px; margin-bottom:10px }
+    .book-meta .title{ font-size:14px; font-weight:600; min-height:36px; }
+    .book-meta .author{ color:var(--muted); font-size:13px; margin-bottom:8px }
+    .checkout-btn{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600 }
+
+    /* Popup bubble (desktop hover) */
+    .popup{ position:absolute; left:50%; transform:translateX(-50%) translateY(8px); bottom:100%; width:260px; background:#fff; border-radius:8px; padding:12px; box-shadow:0 10px 30px rgba(18,18,18,0.12); z-index:30; opacity:0; pointer-events:none; transition:opacity .14s, transform .14s; font-size:13px }
+    .book-card:hover .popup{ opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0) }
+    .popup .p-title{ font-weight:700; margin-bottom:6px }
+    .popup .p-desc{ max-height:86px; overflow:auto; margin-bottom:8px; color:#333; line-height:1.25 }
+    .popup .p-rating{ font-weight:600 }
+
+    /* Cart sidebar */
+    .cart-sidebar{ position:fixed; right:0; top:0; height:100vh; width:360px; background:#fff; transform:translateX(110%); transition:transform .28s; box-shadow:-12px 0 60px rgba(0,0,0,0.12); z-index:120; padding:18px; display:flex; flex-direction:column }
+    .cart-sidebar.open{ transform:translateX(0) }
+
+    /* Chatbot wrapper & tooltip */
+    .chatbot-wrapper{ position:fixed; bottom:18px; right:18px; z-index:90; display:flex; align-items:flex-end; gap:8px }
+    .chatbot{ width:84px; height:auto; cursor:pointer; transition:transform .18s }
+    .chatbot:hover{ transform:scale(1.08) }
+    .chatbot-tooltip{ position:absolute; bottom:110px; right:0; background:white; padding:10px 14px; border-radius:10px; box-shadow:0 8px 26px rgba(0,0,0,0.12); display:none; font-size:14px; white-space:nowrap }
+    .chatbot-wrapper:hover .chatbot-tooltip{ display:block }
+
+    /* Chatbox (Paige) */
+    .chatbox{ position:fixed; bottom:130px; right:18px; width:var(--chat-width); max-width:92%; height:420px; background:#fff; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.18); overflow:hidden; display:flex; flex-direction:column; transform:translateY(18px) scale(.98); opacity:0; pointer-events:none; transition:transform .28s ease, opacity .28s ease }
+    .chatbox.open{ transform:translateY(0) scale(1); opacity:1; pointer-events:auto }
+    .chatbox-header{ background:var(--accent); color:white; padding:12px; display:flex; justify-content:space-between; align-items:center; font-weight:700 }
+    .chatbox-messages{ padding:12px; overflow:auto; flex:1; background:linear-gradient(180deg,#fff,#fff); }
+    .message{ margin-bottom:12px; padding:8px 12px; border-radius:12px; max-width:82% }
+    .user-message{ background:#d9eaff; margin-left:auto; text-align:left }
+    .bot-message{ background:#fff2e6; margin-right:auto; text-align:left }
+    .chatbox-input{ display:flex; padding:10px; border-top:1px solid #eee; gap:8px }
+    .chatbox-input input{ flex:1; padding:8px; border-radius:8px; border:1px solid #ddd }
+    .chatbox-input button{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer }
+
+    /* Typing indicator */
+    .typing{ display:inline-block; padding:8px 12px; background:#fff2e6; border-radius:12px }
+    .typing .dot{ display:inline-block; width:6px; height:6px; background:#c77b3f; border-radius:50%; margin:0 3px; opacity:0.15; animation:blink 1s infinite }
+    .typing .dot:nth-child(1){ animation-delay:0s }
+    .typing .dot:nth-child(2){ animation-delay:.15s }
+    .typing .dot:nth-child(3){ animation-delay:.3s }
+    @keyframes blink { 0%{opacity:.15} 50%{opacity:1} 100%{opacity:.15} }
+
+    /* Genre buttons inside chat */
+    .genre-bar{ display:flex; gap:8px; padding:8px; overflow:auto; }
+    .genre-btn{ background:#fff; border:1px solid #eee; padding:6px 10px; border-radius:18px; cursor:pointer; font-weight:600; font-size:13px }
+    .genre-btn:hover{ background:var(--accent); color:white; border-color:var(--accent) }
+
+    /* responsive tweaks */
+    @media (max-width:640px){ .chatbox{ right:10px; left:10px; width:auto } .chatbot-tooltip{ display:none } .chatbot{ width:70px } }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <img src="assets/images/shell.png" alt="shell">
+      <div class="logo-text">The Shell Library<br><span style="font-size:20px">SYSTEM</span></div>
+    </div>
+
+    <div class="header-controls">
+      <!-- Search input (top-right) -->
+      <input id="topSearch" class="search-input" type="text" placeholder="Search books by title, author, keyword...">
+
+      <div class="top-buttons">
+        <!-- Login goes to login.html-->
+        <button id="loginBtn" onclick="location.href='login.html'">Login</button>
+      </div>
+
+      <button class="cart-btn" id="cartToggle" aria-label="Open cart">
+        <div class="cart-icon">🛒</div>
+        <div class="cart-badge" id="cartCount">0</div>
+      </button>
+    </div>
+  </div>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="About.html">About</a>
+    <a href="Collections.html">Collections</a>
+    <a href="Programs.html">Programs</a>
+    <a href="Community.html">Community</a>
+  </nav>
+  <div class="nav-bar-line"></div>
+
+  <!-- Carousel -->
+  <div class="carousel-container">
+    <div class="carousel-slide" id="carouselSlide">
+      <img src="assets/images/banner1.png" alt="">
+      <img src="assets/images/banner2.png" alt="">
+      <img src="assets/images/banner3.png" alt="">
+      <img src="assets/images/banner4.png" alt="">
+    </div>
+  </div>
+
+  <div style="text-align:center;margin:12px 0">
+    <button id="prevBtn">⬅</button>
+    <button id="nextBtn">➡</button>
+  </div>
+
+  <div class="icon-row">
+    <div class="icon-item"><img src="assets/images/headphones.png" alt=""><p>Too busy to read?<br>Try an audiobook!</p></div>
+    <div class="icon-item"><img src="assets/images/pencil.png" alt=""><p>Share a review</p></div>
+    <div class="icon-item"><img src="assets/images/book.png" alt=""><p>Find your next read</p></div>
+  </div>
+
+  <!-- Books -->
+  <div class="container">
+    <h2 class="section-title">Browse Books</h2>
+    <div class="books-grid" id="booksGrid"></div>
+  </div>
+
+  <!-- Cart Sidebar -->
+  <aside class="cart-sidebar" id="cartSidebar" aria-hidden="true">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-weight:700">Your Cart</div>
+      <button id="closeCart" style="background:transparent;border:none;font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems"><div class="empty-note">Your cart is empty.</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+      <div id="cartTotal" style="font-weight:700">Items: 0</div>
+      <button id="checkoutAll" style="background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer">Proceed</button>
+    </div>
+  </aside>
+
+  <!-- Chatbot + Tooltip -->
+  <div class="chatbot-wrapper" id="chatbotWrapper">
+    <div class="chatbot-tooltip" id="chatbotTooltip">Hi, I'm <strong>Paige</strong>, your AI assistant!<br>Click here to ask me a question.</div>
+    <img class="chatbot" id="chatbot" src="assets/images/chatbot.png" alt="Paige the chatbot">
+  </div>
+
+  <!-- Chatbox (hidden until opened) -->
+  <div class="chatbox" id="chatbox" aria-hidden="true">
+    <div class="chatbox-header">
+      <div>Paige • AI Library Assistant</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="smallTalkHint" style="font-size:12px;opacity:0.9">Type 'help' for tips</div>
+        <button id="chatClose" style="background:none;border:none;color:white;font-size:20px;cursor:pointer">✕</button>
+      </div>
+    </div>
+
+    <!-- genre quick buttons -->
+    <div class="genre-bar" id="genreBar">
+      <!-- genre buttons injected by JS -->
+    </div>
+
+    <div class="chatbox-messages" id="chatboxMessages"></div>
+
+    <div class="chatbox-input">
+      <input id="chatInput" type="text" placeholder="Ask me about books, genres, or authors...">
+      <button id="chatSend">Send</button>
+    </div>
+  </div>
+
+  <!-- scripts -->
+  <script>
+  /********************************************************************
+   * Utilities & Config
+   ********************************************************************/
+  const CSV_PATH = 'data/library_books.csv'; // path to CSV
+  const IMAGE_DIR = 'assets/images/';        // book images
+  const MAX_BOOKS = 45;                      // number of books to load
+  const CART_KEY = 'shell_library_cart';
+  const CHAT_MEMORY_KEY = 'paige_session';
+  const THEMES = { default: 'orange', dark: 'dark' };
+
+  // in-memory data
+  let BOOKS = []; // each: {id, title, author, description, rating, genres, cover}
+  let GENRES = new Set();
+  let sessionMemory = JSON.parse(sessionStorage.getItem(CHAT_MEMORY_KEY) || '{}');
+
+  /********************************************************************
+   * Helper: resolve image path (.jpg or .jpeg)
+   * Returns a Promise that resolves with the existing path string
+   ********************************************************************/
+  function resolveBookCoverPath(n){
+    const jpg = `${IMAGE_DIR}book${n}.jpg`;
+    const jpeg = `${IMAGE_DIR}book${n}.jpeg`;
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(jpg);
+      img.onerror = () => {
+        const img2 = new Image();
+        img2.onload = () => resolve(jpeg);
+        img2.onerror = () => resolve('assets/images/book-placeholder.png'); // fallback
+        img2.src = jpeg;
+      };
+      img.src = jpg;
+    });
+  }
+
+  /********************************************************************
+   * CSV Load (PapaParse for robust CSV parsing)
+   ********************************************************************/
+  function loadBooksFromCSV(){
+    return new Promise((resolve,reject)=>{
+      Papa.parse(CSV_PATH, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          const rows = results.data.slice(0, MAX_BOOKS);
+          // normalize keys
+          const normalized = rows.map((r, idx) => {
+            const n = {};
+            for(const k in r) n[k.trim().toLowerCase()] = (r[k]||'').toString();
+            return n;
+          });
+
+          // resolve covers asynchronously
+          for(let i=0; i<normalized.length; i++){
+            const row = normalized[i];
+            const id = i+1;
+            const cover = await resolveBookCoverPath(id);
+            const genresArr = (row.genres || '').split(',').map(s=>s.trim()).filter(Boolean);
+            genresArr.forEach(g => GENRES.add(g));
+            BOOKS.push({
+              id,
+              title: row.title || row.name || `Book ${id}`,
+              author: row.author || 'Unknown',
+              description: row.description || '',
+              rating: row.rating || '',
+              genres: genresArr,
+              cover
+            });
+          }
+          resolve(BOOKS);
+        },
+        error: (err) => reject(err)
+      });
+    });
+  }
+
+  /********************************************************************
+   * CART (localStorage)
+   ********************************************************************/
+  function getCart(){ return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); }
+  function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); }
+  function addToCart(bookId){
+    const cart = getCart();
+    const idx = cart.findIndex(i => i.id === bookId);
+    const book = BOOKS.find(b => b.id === bookId);
+    if(idx >= 0) cart[idx].qty += 1;
+    else cart.push({ id: bookId, title: book.title, author: book.author, cover: book.cover, qty: 1 });
+    saveCart(cart); refreshCartUI();
+  }
+  function removeFromCart(bookId){
+    let cart = getCart().filter(i => i.id !== bookId);
+    saveCart(cart); refreshCartUI();
+  }
+  function refreshCartUI(){
+    const cart = getCart();
+    const count = cart.reduce((s,i)=>s+i.qty,0);
+    document.getElementById('cartCount').textContent = count;
+    const container = document.getElementById('cartItems');
+    container.innerHTML = '';
+    if(cart.length === 0){ container.innerHTML = '<div class="empty-note">Your cart is empty.</div>'; }
+    else {
+      cart.forEach(item => {
+        const el = document.createElement('div'); el.className = 'cart-item';
+        el.innerHTML = `
+          <img src="${item.cover}" style="width:56px;height:80px;object-fit:cover;border-radius:6px" alt="">
+          <div style="flex:1;margin-left:8px">
+            <div style="font-weight:600">${escapeHtml(item.title)}</div>
+            <div style="color:var(--muted);font-size:13px">${escapeHtml(item.author)}</div>
+            <div style="margin-top:6px">Qty: ${item.qty}</div>
+          </div>
+          <div><button data-remove="${item.id}" style="background:#eee;border:none;padding:6px 8px;border-radius:6px;cursor:pointer">Remove</button></div>
+        `;
+        container.appendChild(el);
+      });
+      container.querySelectorAll('button[data-remove]').forEach(btn=>{
+        btn.addEventListener('click', (e)=> removeFromCart(parseInt(e.currentTarget.getAttribute('data-remove'),10)) );
+      });
+    }
+    document.getElementById('cartTotal').textContent = `Items: ${count}`;
+  }
+  document.getElementById('cartToggle').addEventListener('click', ()=> document.getElementById('cartSidebar').classList.toggle('open'));
+  document.getElementById('closeCart').addEventListener('click', ()=> document.getElementById('cartSidebar').classList.remove('open'));
+  document.getElementById('checkoutAll').addEventListener('click', ()=> {
+    const cart = getCart(); if(cart.length === 0){ alert('Cart is empty.'); return; }
+    alert(`Demo checkout (${cart.reduce((s,i)=>s+i.qty,0)} items).`);
+  });
+
+  /********************************************************************
+   * Render book grid
+   ********************************************************************/
+  function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m])); }
+
+  function renderBookGrid(){
+    const grid = document.getElementById('booksGrid');
+    grid.innerHTML = '';
+    BOOKS.forEach(b => {
+      const div = document.createElement('div'); div.className = 'book-card';
+      div.innerHTML = `
+        <img class="book-cover" src="${b.cover}" alt="${escapeHtml(b.title)}">
+        <div class="book-meta">
+          <div class="title">${escapeHtml(b.title)}</div>
+          <div class="author">${escapeHtml(b.author)}</div>
+          <button class="checkout-btn" data-id="${b.id}">Check Out</button>
+        </div>
+        <div class="popup">
+          <div class="p-title">${escapeHtml(b.title)}</div>
+          <div class="p-desc">${escapeHtml(b.description)}</div>
+          <div class="p-rating">⭐ ${escapeHtml(b.rating)}</div>
+        </div>
+      `;
+      // checkout handler
+      div.querySelector('.checkout-btn').addEventListener('click', ()=> addToCart(b.id));
+      grid.appendChild(div);
+    });
+    refreshCartUI();
+  }
+
+  /********************************************************************
+   * Simple NLP-like scoring & recommendation engine
+   * - scores terms appearing in title/author/description/genres
+   * - supports tone words (cozy, dark, funny, short, romantic, fast)
+   * - returns top N results sorted by score
+   ********************************************************************/
+  const TONE_MAP = {
+    cozy: ['cozy','comfort','heartwarming','warm'],
+    dark: ['dark','bleak','gritty','haunting'],
+    funny: ['humor','funny','comic','lighthearted','witty'],
+    short: ['short','quick','quick read','fast read','novella'],
+    romantic: ['romance','romantic','love','romantic'],
+    thriller: ['thrill','suspense','thriller','edge-of-your-seat'],
+    mystery: ['mystery','mysteries','murder','detective'],
+    fantasy: ['fantasy','magic','myth','epic'],
+    scifi: ['sci-fi','science fiction','space','future']
+  };
+
+  function scoreBookForQuery(book, queryTokens){
+    // baseline
+    let score = 0;
+    const hay = `${book.title} ${book.author} ${book.description} ${book.genres.join(' ')}`.toLowerCase();
+
+    queryTokens.forEach(tok => {
+      if(!tok) return;
+      if(hay.includes(tok)) score += 5; // direct match
+      // partial in words
+      const regex = new RegExp('\\b' + tok + '\\w*', 'i');
+      if(regex.test(hay)) score += 2;
+    });
+
+    // tone boosts
+    for(const tone in TONE_MAP){
+      TONE_MAP[tone].forEach(word => {
+        if(queryTokens.includes(word)) {
+          // if book genres or description contains tone-related words, boost score
+          const toneRegex = new RegExp(word, 'i');
+          if(toneRegex.test(hay)) score += 8;
+        }
+      });
+    }
+
+    // length penalty for very long descriptions (so shorter books rank a bit higher for 'short' queries)
+    if(book.description.length > 700) score -= 2;
+    return score;
+  }
+
+  function recommendBooks(query, topN=3){
+    if(!query || query.trim().length === 0) return [];
+    const cleaned = query.toLowerCase().replace(/[^\w\s-]/g,' ');
+    const tokens = cleaned.split(/\s+/).filter(Boolean);
+
+    // if query is simple like 'mystery' treat as genre search
+    let scored = BOOKS.map(b => ({b, score: scoreBookForQuery(b, tokens)}));
+    scored.sort((a,b) => b.score - a.score);
+
+    const results = scored.filter(s=>s.score>0).map(s=>s.b);
+    // fallback: if no score, try partial matching
+    if(results.length === 0){
+      const partial = BOOKS.filter(b => {
+        const hay = `${b.title} ${b.author} ${b.description} ${b.genres.join(' ')}`.toLowerCase();
+        return tokens.some(t => hay.includes(t));
+      });
+      return partial.slice(0, topN);
+    }
+    return results.slice(0, topN);
+  }
+
+  /********************************************************************
+   * CHAT UI: typing indicator, message rendering, genre buttons, memory
+   ********************************************************************/
+  const chatbotImg = document.getElementById('chatbot');
+  const chatbox = document.getElementById('chatbox');
+  const chatMessages = document.getElementById('chatboxMessages');
+  const chatInput = document.getElementById('chatInput');
+  const chatSend = document.getElementById('chatSend');
+  const chatClose = document.getElementById('chatClose');
+
+  // genre bar
+  const genreBar = document.getElementById('genreBar');
+
+  function saveSessionMemory(){
+    sessionStorage.setItem(CHAT_MEMORY_KEY, JSON.stringify(sessionMemory));
+  }
+
+  function pushUserMemory(key, value){
+    if(!sessionMemory[key]) sessionMemory[key]=[];
+    sessionMemory[key].push(value);
+    saveSessionMemory();
+  }
+
+  function openChat(){
+    chatbox.classList.add('open');
+    document.getElementById('chatbox').setAttribute('aria-hidden','false');
+    // initial greeting if new session
+    if(!sessionMemory.greeted){
+      botSay("Hi, what kind of book are you looking for today? Maybe I can give you a recommendation.");
+      sessionMemory.greeted = true; saveSessionMemory();
+    }
+    // focus input
+    setTimeout(()=> chatInput.focus(), 250);
+  }
+  function closeChat(){ chatbox.classList.remove('open'); chatbox.setAttribute('aria-hidden','true'); }
+
+  chatbotImg.addEventListener('click', openChat);
+  chatClose.addEventListener('click', closeChat);
+
+  function renderMessage(content, who='bot', extraHtml=''){
+    const div = document.createElement('div');
+    div.className = 'message ' + (who==='user' ? 'user-message' : 'bot-message');
+    div.innerHTML = content + (extraHtml || '');
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function userSay(text){
+    renderMessage(escapeHtml(text), 'user');
+    pushUserMemory('queries', text);
+  }
+
+  // typing indicator
+  function showTyping(){
+    const t = document.createElement('div'); t.className = 'message bot-message typing';
+    t.id = 'typingIndicator';
+    t.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    chatMessages.appendChild(t);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  function hideTyping(){
+    const t = document.getElementById('typingIndicator'); if(t) t.remove();
+  }
+
+  // bot says something (with typing delay)
+  function botSay(text, options = {}) {
+    // options: includeRecommendations: array of book objects, includeButtons: bool
+    showTyping();
+    let delay = Math.min(1200 + text.length * 6, 2200);
+    if(options.instant) delay = 200;
+    setTimeout(()=>{
+      hideTyping();
+      if(options.recommendations && options.recommendations.length){
+        // render recommendations with covers & check out button
+        options.recommendations.forEach(b => {
+          const html = `
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <img src="${b.cover}" style="width:64px;height:96px;object-fit:cover;border-radius:6px" alt="">
+              <div style="flex:1">
+                <div style="font-weight:700">${escapeHtml(b.title)}</div>
+                <div style="color:var(--muted);font-size:13px">${escapeHtml(b.author)}</div>
+                <div style="font-size:13px;margin-top:6px;max-height:60px;overflow:hidden">${escapeHtml(b.description).substring(0,150)}${b.description.length>150?'…':''}</div>
+                <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+                  <button class="chat-checkout-btn" data-id="${b.id}" style="background:var(--accent);color:white;border:none;padding:6px 10px;border-radius:8px;cursor:pointer">Check Out</button>
+                  <div style="font-weight:600">⭐ ${escapeHtml(b.rating)}</div>
+                </div>
+              </div>
+            </div>
+          `;
+          renderMessage(html, 'bot');
+        });
+        // add handlers for chat checkout buttons
+        setTimeout(()=> {
+          document.querySelectorAll('.chat-checkout-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const id = parseInt(e.currentTarget.getAttribute('data-id'),10);
+              addToCart(id);
+              botSay('Added to your cart! Anything else I can find for you?', { instant: true });
+            });
+          });
+        }, 100);
+      } else {
+        renderMessage(text, 'bot');
+      }
+    }, delay);
+  }
+
+  // Receive user input
+  function handleUserInput(){
+    const text = chatInput.value.trim();
+    if(!text) return;
+    chatInput.value = '';
+    userSay(text);
+
+    // interpret simple commands
+    const lower = text.toLowerCase();
+    if(lower === 'help'){
+      botSay('Try asking: "recommend fantasy books", "something cozy", "books by John Green", or click a genre button.');
+      return;
+    }
+    if(['hi','hello','hey','howdy'].includes(lower.split(/\s+/)[0])){
+      botSay("Hello! Tell me what you're in the mood for — genre, tone, author, or a short description of what you like.");
+      return;
+    }
+    if(lower.includes('how are you')){
+      botSay("I'm doing great — ready to help you find your next read! 📚");
+      return;
+    }
+    // If user asks to recommend N books: parse "recommend 3 fantasy books" or "give me 2 romance"
+    const recommendMatch = lower.match(/(?:recommend|show|give me|i want|suggest)\s*(\d)?\s*(\w+)?\s*(books|book)?/);
+    if(recommendMatch){
+      const n = parseInt(recommendMatch[1]) || 3;
+      const genreOrToken = recommendMatch[2] || '';
+      const query = genreOrToken ? genreOrToken : lower;
+      const recs = recommendBooks(query, Math.min(5, n));
+      if(recs.length === 0) botSay("I couldn't find anything matching that. Try a different keyword or genre.");
+      else botSay("Here are some picks I think you'll like:", { recommendations: recs });
+      return;
+    }
+
+    // Default: do search-based recommendations via recommendBooks
+    const recs = recommendBooks(lower, 3);
+    if(recs.length === 0){
+      botSay("Hmm… I couldn't find a close match. Could you try another keyword or be more specific?");
+    } else {
+      // remember genre preferences
+      recs.forEach(r => {
+        (r.genres || []).forEach(g => {
+          sessionMemory.preferredGenres = sessionMemory.preferredGenres || {};
+          sessionMemory.preferredGenres[g] = (sessionMemory.preferredGenres[g] || 0) + 1;
+        });
+      });
+      saveSessionMemory();
+      botSay("I think you might like these:", { recommendations: recs });
+    }
+  }
+
+  chatSend.addEventListener('click', handleUserInput);
+  chatInput.addEventListener('keypress', e => { if(e.key === 'Enter') handleUserInput(); });
+
+  /********************************************************************
+   * Genre buttons
+   ********************************************************************/
+  function renderGenreButtons(){
+    // make a prioritized list: most common first
+    const counts = {};
+    GENRES.forEach(g => counts[g] = 0);
+    BOOKS.forEach(b => b.genres.forEach(g => { counts[g] = (counts[g]||0)+1 }));
+    const sorted = Array.from(GENRES).sort((a,b)=> (counts[b]||0)-(counts[a]||0)).slice(0,12);
+    genreBar.innerHTML = '';
+    sorted.forEach(g => {
+      const btn = document.createElement('button'); btn.className = 'genre-btn'; btn.textContent = g;
+      btn.addEventListener('click', ()=> {
+        const recs = BOOKS.filter(b => b.genres.map(x=>x.toLowerCase()).includes(g.toLowerCase())).slice(0,4);
+        if(recs.length === 0) botSay(`I couldn't find any books in ${g}. Try another genre.`);
+        else botSay(`Top picks in ${g}:`, { recommendations: recs.slice(0,3) });
+        // remember preference
+        sessionMemory.preferredGenres = sessionMemory.preferredGenres || {}; sessionMemory.preferredGenres[g] = (sessionMemory.preferredGenres[g]||0)+1; saveSessionMemory();
+      });
+      genreBar.appendChild(btn);
+    });
+  }
+
+  /********************************************************************
+   * Top search (header) filtering - live filter on grid
+   ********************************************************************/
+  const topSearch = document.getElementById('topSearch');
+  topSearch.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('.book-card').forEach(card => {
+      const title = card.querySelector('.title').innerText.toLowerCase();
+      const author = card.querySelector('.author').innerText.toLowerCase();
+      const desc = card.querySelector('.popup .p-desc').innerText.toLowerCase();
+      if(title.includes(q) || author.includes(q) || desc.includes(q)) card.style.display = '';
+      else card.style.display = 'none';
+    });
+  });
+
+  /********************************************************************
+   * Carousel simple logic (4 slides)
+   ********************************************************************/
+  (function(){
+    const slideEl = document.getElementById('carouselSlide');
+    const imgs = slideEl.querySelectorAll('img');
+    const total = imgs.length;
+    let idx = 0;
+    function show(){ slideEl.style.transform = `translateX(${-idx*100}%)`; }
+    document.getElementById('nextBtn').addEventListener('click', ()=> { idx=(idx+1)%total; show(); });
+    document.getElementById('prevBtn').addEventListener('click', ()=> { idx=(idx-1+total)%total; show(); });
+    setInterval(()=>{ idx=(idx+1)%total; show(); }, 4000);
+    show();
+  })();
+
+  /********************************************************************
+   * Initialization
+   ********************************************************************/
+  (async function init(){
+    try {
+      await loadBooksFromCSV();
+      renderBookGrid();
+      renderGenreButtons();
+      refreshCartUI();
+    } catch(err){
+      console.error('Failed to load books CSV', err);
+      document.getElementById('booksGrid').innerHTML = '<div style="grid-column:1/-1;padding:18px;background:#fff;border-radius:8px;color:#900">Failed to load books CSV. Check console.</div>';
+    }
+  })();
+
+  // expose addToCart for chat checkout buttons if needed globally
+  window.addToCart = addToCart;
+
+  </script>
+</body>
+</html>
+
